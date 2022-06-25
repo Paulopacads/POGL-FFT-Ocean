@@ -9,7 +9,13 @@ set(OPT_FLAGS
 
 # END OPTIMIZATION FLAGS
 set(SRC_ENGINE
-    "src/option_parsing.cpp"
+    "src/fft/fast_fourier_transform.cpp"
+    "src/philipps/philipps_spectrum.cpp"
+    "src/render/gl_rendering.cpp"
+    "src/tools/gl_utils.cpp"
+    "src/tools/matrix4.cpp"
+    "src/tools/option_parsing.cpp"
+    "src/tools/program.cpp"
 )
 
 # Directories containing headers must be specified in the include_directories()
@@ -21,36 +27,23 @@ include_directories(
 
 
 # SETUP
-cmake_minimum_required(VERSION 3.12)
-project(FFTOcean)
+cmake_minimum_required(VERSION 3.23)
+project(fftocean)
 
 # BUILD OPTIONS
 set(CMAKE_CXX_STANDARD 17)
-
-if (NOT CMAKE_BUILD_TYPE)
-    message(STATUS "No build type selected, default to Release")
-    set(CMAKE_BUILD_TYPE "Release")
-endif()
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wextra -pedantic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${OPT_FLAGS}")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3 -fsanitize=address")
 
 # LIBRARIES
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(Boost_USE_STATIC_LIBS ON)
-endif()
 find_package(Boost REQUIRED COMPONENTS system program_options)
-set(LIBRARIES Boost::system Boost::program_options ${CMAKE_DL_LIBS})
+find_package(OpenGL REQUIRED)
+find_package(GLUT REQUIRED)
+find_package(GLEW REQUIRED)
+include_directories(${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS})
 
-# CHESSENGINE
-add_executable(fftocean)
-target_sources(fftocean PRIVATE "main.cpp" ${SRC_ENGINE})
-target_link_libraries(fftocean PRIVATE ${LIBRARIES})
-
-# STATIC TARGET
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_executable(fftocean-static)
-    target_sources(fftocean-static PRIVATE "main.cpp" ${SRC_ENGINE})
-    target_link_libraries(fftocean-static PRIVATE ${LIBRARIES} -static)
-endif()
+# FFTOCEAN
+add_executable(fftocean main.cpp)
+target_sources(fftocean PRIVATE ${SRC_ENGINE})
+target_link_libraries(fftocean PRIVATE Boost::system Boost::program_options ${CMAKE_DL_LIBS} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${GLEW_LIBRARIES})
