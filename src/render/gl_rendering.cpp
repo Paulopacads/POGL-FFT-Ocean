@@ -1,21 +1,52 @@
+#include <cmath>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 #include <iostream>
 
+#include "camera/camera.hpp"
 #include "tools/gl_utils.hpp"
 #include "tools/option_parsing.hpp"
 #include "tools/program.hpp"
 #include "object_vbo.hpp"
 
+Camera *camera;
 Program *program;
 uint vao_id;
+struct options options;
 
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);TEST_OPENGL_ERROR();
     glBindVertexArray(vao_id);TEST_OPENGL_ERROR();
+    camera->translation();
+
+    int world_camera_location = glGetUniformLocation(program->get_program_id(), "world_camera");TEST_OPENGL_ERROR();
+    if (world_camera_location != -1) {
+        Matrix4 matrix = lookAt(camera->getX(), camera->getY(), camera->getZ(), camera->getSightX(), camera->getSightY(), camera->getSightZ(), 0, 1, 0);
+        glUniformMatrix4fv(world_camera_location, 1, false, matrix.get_ptr());TEST_OPENGL_ERROR();
+    }
+
     glDrawArrays(GL_TRIANGLES, 0, vertex_buffer_data.size());TEST_OPENGL_ERROR();
     glBindVertexArray(0);TEST_OPENGL_ERROR();
     glutSwapBuffers();TEST_OPENGL_ERROR();
+    glutPostRedisplay();
+}
+
+void reshape(int width, int height) {
+    glViewport(0, 0, width, height);
+    options.rx = width;
+    options.ry = height;
+
+    int projection_location = glGetUniformLocation(program->get_program_id(), "projection");TEST_OPENGL_ERROR();
+
+    if (projection_location != -1) {
+        float i = width;
+        float j = height;
+        float tmp = sqrt(i * i + j * j) / 2;
+        i /= tmp;
+        j /= tmp;
+        Matrix4 matrix = frustum(-i, i, -j, j, 2, 300);
+        glUniformMatrix4fv(projection_location, 1, false, matrix.get_ptr());TEST_OPENGL_ERROR();
+    }
 }
 
 bool init_glut(struct options& opt) {
@@ -24,12 +55,14 @@ bool init_glut(struct options& opt) {
     glutInit(&argc, argv);TEST_OPENGL_ERROR();
     glutInitContextVersion(4, 5);TEST_OPENGL_ERROR();
     glutInitContextProfile(GLUT_CORE_PROFILE);TEST_OPENGL_ERROR();
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);TEST_OPENGL_ERROR();
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_MULTISAMPLE);TEST_OPENGL_ERROR();
     glutInitWindowSize(opt.rx, opt.ry);TEST_OPENGL_ERROR();
     glutInitWindowPosition (0, 0);TEST_OPENGL_ERROR();
     glutCreateWindow("POGL");TEST_OPENGL_ERROR();
+    glEnable(GL_MULTISAMPLE);
 
     glutDisplayFunc(display);TEST_OPENGL_ERROR();
+    glutReshapeFunc(reshape);TEST_OPENGL_ERROR();
 
     return true;
 
@@ -79,20 +112,25 @@ bool init_object() {
 }
 
 bool init_pov() {
-    int world_camera_location = glGetUniformLocation(program->get_program_id(), "world_camera");TEST_OPENGL_ERROR();
+    // int world_camera_location = glGetUniformLocation(program->get_program_id(), "world_camera");TEST_OPENGL_ERROR();
 
-    if (world_camera_location == -1)
-        return false;
+    // if (world_camera_location == -1)
+    //     return false;
 
-    Matrix4 matrix = lookAt(5, 5, 5, 0, 0, 0, 0, 1, 0);
-    glUniformMatrix4fv(world_camera_location, 1, false, matrix.get_ptr());TEST_OPENGL_ERROR();
+    // Matrix4 matrix = lookAt(5, 5, 5, 0, 0, 0, 0, 1, 0);
+    // glUniformMatrix4fv(world_camera_location, 1, false, matrix.get_ptr());TEST_OPENGL_ERROR();
 
     int projection_location = glGetUniformLocation(program->get_program_id(), "projection");TEST_OPENGL_ERROR();
 
     if (projection_location == -1)
         return false;
 
-    matrix = frustum(-1.6, 1.6, -.9, .9, 2, 300);
+    float i = options.rx;
+    float j = options.ry;
+    float tmp = sqrt(i * i + j * j) / 2;
+    i /= tmp;
+    j /= tmp;
+    Matrix4 matrix = frustum(-i, i, -j, j, 2, 300);
     glUniformMatrix4fv(projection_location, 1, false, matrix.get_ptr());TEST_OPENGL_ERROR();
 
     return true;
@@ -115,7 +153,23 @@ bool init_shaders() {
     return true;
 }
 
+void mouse_move(int x, int y) {
+    if (camera->rotation(x, y) && (x >= .75 * options.rx || x <= .25 * options.rx || y >= .75 * options.ry || y <= .25 * options.ry)) {
+        glutWarpPointer(options.rx / 2, options.ry / 2);
+        camera->setMouse(options.rx / 2, options.ry / 2);
+    }
+}
+    
+void kb_press(unsigned char key, int, int) {
+    camera->setKeyboard(key, true);
+}
+
+void kb_release(unsigned char key, int, int) {
+    camera->setKeyboard(key, false);
+}
+
 int init(struct options& opt) {
+    options = opt;
     if (!init_glut(opt)) {
         std::cerr << "Having trouble initializing glut\n";
         return 1;
@@ -145,6 +199,11 @@ int init(struct options& opt) {
         std::cerr << "Having trouble initializing object\n";
         return 6;
     }
+
+    camera = new Camera(Camera::KEYBOARD::QWERTY, 5, 5, 5, M_PI * .6, -M_PI * .75, .001, .05, opt.rx, opt.ry);
+    glutPassiveMotionFunc(mouse_move);
+    glutKeyboardFunc(kb_press);
+    glutKeyboardUpFunc(kb_release);
 
     glutMainLoop();
 

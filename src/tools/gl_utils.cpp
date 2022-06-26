@@ -61,8 +61,6 @@ Matrix4 lookAt(const float &eyeX, const float &eyeY,
     mat[11] = 0;
     mat[15] = 1;
 
-    std::cout << mat << std::endl;
-
     return mat;
 }
 
@@ -81,8 +79,6 @@ Matrix4 frustum(float left, float right, float bottom,
     mat[11] = -1;
 
     mat[14] = -2 * farVal * nearVal / (farVal - nearVal);
-
-    std::cout << mat << std::endl;
 
     return mat;
 }

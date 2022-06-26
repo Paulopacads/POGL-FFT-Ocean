@@ -9,6 +9,7 @@ set(OPT_FLAGS
 
 # END OPTIMIZATION FLAGS
 set(SRC_ENGINE
+    "src/camera/camera.cpp"
     "src/fft/fast_fourier_transform.cpp"
     "src/philipps/philipps_spectrum.cpp"
     "src/render/gl_rendering.cpp"
