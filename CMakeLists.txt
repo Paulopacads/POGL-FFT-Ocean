@@ -10,8 +10,10 @@ set(OPT_FLAGS
 # END OPTIMIZATION FLAGS
 set(SRC_ENGINE
     "src/camera/camera.cpp"
-    "src/fft/fast_fourier_transform.cpp"
-    "src/philipps/philipps_spectrum.cpp"
+    "src/ocean/fft/fast_fourier_transform.cpp"
+    "src/ocean/height/height_spectrum.cpp"
+    "src/ocean/ocean.cpp"
+    "src/ocean/philipps/philipps_spectrum.cpp"
     "src/render/gl_rendering.cpp"
     "src/tools/gl_utils.cpp"
     "src/tools/matrix4.cpp"
@@ -33,9 +35,9 @@ project(fftocean)
 
 # BUILD OPTIONS
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${OPT_FLAGS}")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3 -fsanitize=address")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -g")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${OPT_FLAGS} -g")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3 -fsanitize=address -g")
 
 # LIBRARIES
 find_package(Boost REQUIRED COMPONENTS system program_options)

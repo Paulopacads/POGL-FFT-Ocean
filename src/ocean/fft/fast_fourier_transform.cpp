@@ -1,4 +1,6 @@
-# include "fast_fourier_transform.hpp"
+#include "fast_fourier_transform.hpp"
+
+#include <iostream>
 
 void FFT::sort() {
     for (int i = 0, nc = n; i < p - 1; i++, nc /= 2) {
@@ -25,15 +27,14 @@ void FFT::sort() {
             }
             r_sort.insert(r_iter, r1.begin(), r1.end());
             r_sort.insert(r_sort.end(), r2.begin(), r2.end());
-            r_sort.insert(i_iter, i1.begin(), i1.end());
-            r_sort.insert(i_sort.end(), i2.begin(), i2.end());
+            i_sort.insert(i_iter, i1.begin(), i1.end());
+            i_sort.insert(i_sort.end(), i2.begin(), i2.end());
 
             r_iter = r_sort.end();
             i_iter = i_sort.end();
         }
         swap(r_sort, *r_values);
         swap(i_sort, *i_values);
-        nc /= 2;
     }
 }
 

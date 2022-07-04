@@ -37,8 +37,13 @@ float Camera::getZ() {
 
 void Camera::setKeyboard(int i, bool pressed) {
     _keys[i] = pressed;
-    if (pressed && i == _keyMap[PAUSE])
-        _pause = !_pause;
+    if (pressed && i == _keyMap[PAUSE]) {
+        if (_pause = !_pause)
+            glutSetCursor(GLUT_CURSOR_CROSSHAIR);
+        else {
+            glutSetCursor(GLUT_CURSOR_NONE);
+        }
+    }
 }
 
 void Camera::setMouse(int x, int y) {

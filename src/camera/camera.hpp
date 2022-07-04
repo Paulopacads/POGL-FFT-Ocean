@@ -44,6 +44,6 @@ class Camera {
         float _rotationSpeed;
         float _translationSpeed;
         int _time;
-        bool _pause;
+        bool _pause = false;
     
 };
