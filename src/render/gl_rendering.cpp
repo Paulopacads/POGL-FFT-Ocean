@@ -94,7 +94,7 @@ bool init_glut(struct options& opt) {
     int argc = 1;
     char *argv[1] = {(char*)"Something"};
     glutInit(&argc, argv);TEST_OPENGL_ERROR();
-    glutInitContextVersion(4, 5);TEST_OPENGL_ERROR();
+    // glutInitContextVersion(4, 5);TEST_OPENGL_ERROR();
     glutInitContextProfile(GLUT_CORE_PROFILE);TEST_OPENGL_ERROR();
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_MULTISAMPLE);TEST_OPENGL_ERROR();
     glutInitWindowSize(opt.rx, opt.ry);TEST_OPENGL_ERROR();
