@@ -32,6 +32,29 @@ void kb_press(unsigned char key, int, int) {
 void kb_release(unsigned char key, int, int) {
     camera->setKeyboard(key, false);
 }
+
+void update_buffer() {
+    GLushort indices[ocean->get_x_points() * ocean->get_y_points() * 6];
+    int i = 0;
+
+    // Triangles
+    for(int y = 0; y < ocean->get_y_points(); y++) {
+        for(int x = 0; x < ocean->get_x_points(); x++) {
+            indices[i++] = y * 101 + x;
+            indices[i++] = y * 101 + x + 1;
+            indices[i++] = (y + 1) * 101 + x + 1;
+
+            indices[i++] = y * 101 + x;
+            indices[i++] = (y + 1) * 101 + x + 1;
+            indices[i++] = (y + 1) * 101 + x;
+        }
+    }
+
+    GLuint surface_ibo;
+    glGenBuffers(1, &surface_ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, surface_ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof indices, indices, GL_STATIC_DRAW);
+}
     
 void display_ocean() {
     (*ocean)();
