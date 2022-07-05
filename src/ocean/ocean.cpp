@@ -3,19 +3,19 @@
 #include <GL/freeglut.h>
 #include <iostream>
     
-const int Ocean::get_scene_width() {
+int Ocean::get_scene_width() {
     return _sceneWidth;
 }
 
-const int Ocean::get_scene_height() {
+int Ocean::get_scene_height() {
     return _sceneHeight;
 }
 
-const int Ocean::get_x_points() {
+int Ocean::get_x_points() {
     return _xPoints;
 }
 
-const int Ocean::get_y_points() {
+int Ocean::get_y_points() {
     return _yPoints;
 }
 

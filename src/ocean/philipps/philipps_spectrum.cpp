@@ -21,7 +21,7 @@ void Philipps::init_fonctor(const int i) {
     _currentY = -_yPoints / 2;
 }
 
-const double Philipps::operator()() {
+double Philipps::operator()() {
     const double kx = 2 * M_PI * _currentX / _sceneWidth;
     const double ky = 2 * M_PI * _currentY / _sceneHeight;
     const double k2 = kx * kx + ky * ky;

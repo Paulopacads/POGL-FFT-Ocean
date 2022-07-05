@@ -12,7 +12,7 @@ void Height::init_fonctor(const int i) {
     _currentY = -_yPoints / 2;
 }
 
-const double Height::operator()() {
+double Height::operator()() {
     return sqrt(_philippsSpectrums[_currentX + _xPoints / 2][_currentY + _yPoints / 2] / 2) * gaussian();
     ++_currentY;
 }
@@ -27,7 +27,7 @@ void Height::generate_philipps(Philipps* const philipps) {
     }
 }
 
-const double Height::gaussian() {
+double Height::gaussian() {
     double var1;
     double var2;
     double s;

@@ -5,7 +5,7 @@ class Philipps {
         Philipps(const double, const double, const int, const int, const double, const int, const double, const double);
         ~Philipps() {}
     
-        const double operator()();
+        double operator()();
     
         void init_fonctor(const int);
 

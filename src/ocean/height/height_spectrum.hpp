@@ -6,12 +6,12 @@
 
 class Height {
     public:
-        static const double gaussian();
+        static double gaussian();
     
         Height(const int, const int);
         ~Height() {}
     
-        const double operator()();
+        double operator()();
     
         void init_fonctor(const int);
         void generate_philipps(Philipps* const);

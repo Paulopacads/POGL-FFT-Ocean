@@ -10,10 +10,10 @@ class Ocean {
         Ocean(const double, const double, const int, const int, const double);
         ~Ocean();
     
-        const int get_scene_width();
-        const int get_scene_height();
-        const int get_x_points();
-        const int get_y_points();
+        int get_scene_width();
+        int get_scene_height();
+        int get_x_points();
+        int get_y_points();
     
         void generate_height(Height* const);
         void operator()();

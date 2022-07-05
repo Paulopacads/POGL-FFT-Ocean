@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "tools/option_parsing.hpp"
-#include "render/gl_rendering.hpp"
+#include "render/rendering.hpp"
 
 #define DEFAULT_RX 1920
 #define DEFAULT_RY 1080

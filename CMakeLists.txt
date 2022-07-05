@@ -14,11 +14,12 @@ set(SRC_ENGINE
     "src/ocean/height/height_spectrum.cpp"
     "src/ocean/ocean.cpp"
     "src/ocean/philipps/philipps_spectrum.cpp"
-    "src/render/gl_rendering.cpp"
+    # "src/render/gl_rendering.cpp"
+    "src/render/rendering.cpp"
     "src/tools/gl_utils.cpp"
     "src/tools/matrix4.cpp"
     "src/tools/option_parsing.cpp"
-    "src/tools/program.cpp"
+    # "src/tools/program.cpp"
 )
 
 # Directories containing headers must be specified in the include_directories()
