@@ -13,6 +13,7 @@ Ocean *ocean;
 struct options options;
 std::vector<double *> oceanVerticiesX;
 std::vector<double *> oceanVerticiesY;
+float *buffer;
 
 void move_camera (void) {
     camera->translation();
@@ -23,22 +24,65 @@ void move_camera (void) {
 
 void draw_ocean (void) {
     (*ocean)();
-    glColor3ub(82, 184, 255);TEST_OPENGL_ERROR();
+
+
     for(int i = 0; i <= ocean->get_x_points(); ++i) {
         ocean->y_vertex_array(i, oceanVerticiesY[i]);
-        glEnableClientState(GL_VERTEX_ARRAY);TEST_OPENGL_ERROR();
-        glVertexPointer(3, GL_DOUBLE, 0, oceanVerticiesY[i]);TEST_OPENGL_ERROR();
-        glDrawArrays(GL_LINE_STRIP, 0, ocean->get_y_points() + 1);TEST_OPENGL_ERROR();
-        glDisableClientState(GL_VERTEX_ARRAY);TEST_OPENGL_ERROR();
     }
     for(int i = 0; i <= ocean->get_y_points(); ++i) {
         ocean->x_vertex_array(i, oceanVerticiesX[i]);
-        glEnableClientState(GL_VERTEX_ARRAY);TEST_OPENGL_ERROR();
-        glVertexPointer(3, GL_DOUBLE, 0, oceanVerticiesX[i]);TEST_OPENGL_ERROR();
-        glDrawArrays(GL_LINE_STRIP, 0, ocean->get_x_points() + 1);TEST_OPENGL_ERROR();
-        glDisableClientState(GL_VERTEX_ARRAY);TEST_OPENGL_ERROR();
     }
+
+    int curr = 0;
+    for (int i = 0; i < ocean->get_x_points(); ++i) {
+        for (int j = 0; j < ocean->get_y_points(); ++j) {
+            buffer[curr++] = oceanVerticiesX[i][3 * j];
+            buffer[curr++] = oceanVerticiesX[i][3 * j + 1];
+            buffer[curr++] = oceanVerticiesX[i][3 * j + 2];
+            
+            buffer[curr++] = oceanVerticiesX[i][3 * (j + 1)];
+            buffer[curr++] = oceanVerticiesX[i][3 * (j + 1) + 1];
+            buffer[curr++] = oceanVerticiesX[i][3 * (j + 1) + 2];
+            
+            buffer[curr++] = oceanVerticiesX[i + 1][3 * j];
+            buffer[curr++] = oceanVerticiesX[i + 1][3 * j + 1];
+            buffer[curr++] = oceanVerticiesX[i + 1][3 * j + 2];
+            
+            buffer[curr++] = oceanVerticiesX[i + 1][3 * (j + 1)];
+            buffer[curr++] = oceanVerticiesX[i + 1][3 * (j + 1) + 1];
+            buffer[curr++] = oceanVerticiesX[i + 1][3 * (j + 1) + 2];
+            
+            buffer[curr++] = oceanVerticiesX[i][3 * (j + 1)];
+            buffer[curr++] = oceanVerticiesX[i][3 * (j + 1) + 1];
+            buffer[curr++] = oceanVerticiesX[i][3 * (j + 1) + 2];
+            
+            buffer[curr++] = oceanVerticiesX[i + 1][3 * j];
+            buffer[curr++] = oceanVerticiesX[i + 1][3 * j + 1];
+            buffer[curr++] = oceanVerticiesX[i + 1][3 * j + 2];
+        }
+    }
+
+    glColor3ub(80, 180, 255);TEST_OPENGL_ERROR();
+    glEnableClientState(GL_VERTEX_ARRAY);TEST_OPENGL_ERROR();
+    glVertexPointer(3, GL_FLOAT, 0, buffer);TEST_OPENGL_ERROR();
+    glDrawArrays(GL_TRIANGLES, 0, ocean->get_x_points() * ocean->get_y_points() * 6);TEST_OPENGL_ERROR();
     glColor3ub(0, 0, 0);TEST_OPENGL_ERROR();
+
+
+    // for(int i = 0; i <= ocean->get_x_points(); ++i) {
+    //     ocean->y_vertex_array(i, oceanVerticiesY[i]);
+    //     glEnableClientState(GL_VERTEX_ARRAY);TEST_OPENGL_ERROR();
+    //     glVertexPointer(3, GL_DOUBLE, 0, oceanVerticiesY[i]);TEST_OPENGL_ERROR();
+    //     glDrawArrays(GL_LINE_STRIP, 0, ocean->get_y_points() + 1);TEST_OPENGL_ERROR();
+    //     glDisableClientState(GL_VERTEX_ARRAY);TEST_OPENGL_ERROR();
+    // }
+    // for(int i = 0; i <= ocean->get_y_points(); ++i) {
+    //     ocean->x_vertex_array(i, oceanVerticiesX[i]);
+    //     glEnableClientState(GL_VERTEX_ARRAY);TEST_OPENGL_ERROR();
+    //     glVertexPointer(3, GL_DOUBLE, 0, oceanVerticiesX[i]);TEST_OPENGL_ERROR();
+    //     glDrawArrays(GL_LINE_STRIP, 0, ocean->get_x_points() + 1);TEST_OPENGL_ERROR();
+    //     glDisableClientState(GL_VERTEX_ARRAY);TEST_OPENGL_ERROR();
+    // }
 }
 
 void reshape(int width, int height) {
@@ -84,7 +128,6 @@ bool init_glut (struct options& opt) {
 
     glutDisplayFunc(display);TEST_OPENGL_ERROR();
     glutReshapeFunc(reshape);TEST_OPENGL_ERROR();
-
     return true;
 }
 
@@ -118,7 +161,7 @@ bool init_object (void) {
     ocean = new Ocean(350, 350, 128, 128, .6);
 
     Height height = Height(128, 128);
-    Philipps philipps = Philipps(350, 350, 128, 128, 50, 2, .1, .0000038);
+    Philipps philipps = Philipps(350, 350, 128, 128, 50, 2, .1, .000038);
     height.generate_philipps(&philipps);
     ocean->generate_height(&height);
 
@@ -133,6 +176,8 @@ bool init_object (void) {
 
     for(int i = 0; i <= ocean->get_y_points(); ++i)
         ocean->init_x_vertex_array(i, oceanVerticiesX[i]);
+
+    buffer = (float *) malloc(128 * 128 * 18 * sizeof(float));
     return true;
 }
 
@@ -148,5 +193,13 @@ int init (struct options& opt) {
     init_pov();
     init_object();
     glutMainLoop();
+
+    free(buffer);
+    for(int i = 0; i < ocean->get_y_points(); ++i)
+        delete[] oceanVerticiesX[i];
+    for(int i = 0; i < ocean->get_x_points(); ++i)
+        delete[] oceanVerticiesY[i];
+    delete camera;
+    delete ocean;
     return 0;
 }
