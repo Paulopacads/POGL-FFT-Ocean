@@ -7,28 +7,31 @@
 #include "ocean/ocean.hpp"
 #include "tools/gl_utils.hpp"
 #include "tools/option_parsing.hpp"
+#include "tools/program.hpp"
 
 Camera *camera;
 Ocean *ocean;
+Program *program;
 struct options options;
 std::vector<double *> oceanVerticiesX;
-std::vector<double *> oceanVerticiesY;
 float *buffer;
+
+bool init_glew (void) {
+    return glewInit() == GLEW_OK;
+}
 
 void move_camera (void) {
     camera->translation();
-    glMatrixMode(GL_MODELVIEW);
-    Matrix4 matrix = lookAt(camera->getX(), camera->getY(), camera->getZ(), camera->getSightX(), camera->getSightY(), camera->getSightZ(), 0, 1, 0);
-    glLoadMatrixf(matrix.get_ptr());TEST_OPENGL_ERROR();
+    int world_camera_location = glGetUniformLocation(program->get_program_id(), "world_camera");TEST_OPENGL_ERROR();
+    if (world_camera_location != -1) {
+        Matrix4 matrix = lookAt(camera->getX(), camera->getY(), camera->getZ(), camera->getSightX(), camera->getSightY(), camera->getSightZ(), 0, 1, 0);
+        glUniformMatrix4fv(world_camera_location, 1, false, matrix.get_ptr());TEST_OPENGL_ERROR();
+    }
 }
 
 void draw_ocean (void) {
     (*ocean)();
 
-
-    for(int i = 0; i <= ocean->get_x_points(); ++i) {
-        ocean->y_vertex_array(i, oceanVerticiesY[i]);
-    }
     for(int i = 0; i <= ocean->get_y_points(); ++i) {
         ocean->x_vertex_array(i, oceanVerticiesX[i]);
     }
@@ -62,43 +65,17 @@ void draw_ocean (void) {
         }
     }
 
-    glColor3ub(80, 180, 255);TEST_OPENGL_ERROR();
+    int color_location = glGetUniformLocation(program->get_program_id(), "color");TEST_OPENGL_ERROR();
+
+    if (color_location != -1) {
+        glUniform3f(color_location, .337, .706, 1.);TEST_OPENGL_ERROR();
+    }
     glEnableClientState(GL_VERTEX_ARRAY);TEST_OPENGL_ERROR();
     glVertexPointer(3, GL_FLOAT, 0, buffer);TEST_OPENGL_ERROR();
     glDrawArrays(GL_TRIANGLES, 0, ocean->get_x_points() * ocean->get_y_points() * 6);TEST_OPENGL_ERROR();
-    glColor3ub(0, 0, 0);TEST_OPENGL_ERROR();
-
-
-    // for(int i = 0; i <= ocean->get_x_points(); ++i) {
-    //     ocean->y_vertex_array(i, oceanVerticiesY[i]);
-    //     glEnableClientState(GL_VERTEX_ARRAY);TEST_OPENGL_ERROR();
-    //     glVertexPointer(3, GL_DOUBLE, 0, oceanVerticiesY[i]);TEST_OPENGL_ERROR();
-    //     glDrawArrays(GL_LINE_STRIP, 0, ocean->get_y_points() + 1);TEST_OPENGL_ERROR();
-    //     glDisableClientState(GL_VERTEX_ARRAY);TEST_OPENGL_ERROR();
-    // }
-    // for(int i = 0; i <= ocean->get_y_points(); ++i) {
-    //     ocean->x_vertex_array(i, oceanVerticiesX[i]);
-    //     glEnableClientState(GL_VERTEX_ARRAY);TEST_OPENGL_ERROR();
-    //     glVertexPointer(3, GL_DOUBLE, 0, oceanVerticiesX[i]);TEST_OPENGL_ERROR();
-    //     glDrawArrays(GL_LINE_STRIP, 0, ocean->get_x_points() + 1);TEST_OPENGL_ERROR();
-    //     glDisableClientState(GL_VERTEX_ARRAY);TEST_OPENGL_ERROR();
-    // }
-}
-
-void reshape(int width, int height) {
-    glViewport(0, 0, width, height);
-    options.rx = width;
-    options.ry = height;
-
-    float i = width;
-    float j = height;
-    float tmp = sqrt(i * i + j * j) / 2;
-    i /= tmp;
-    j /= tmp;
-
-    glMatrixMode(GL_PROJECTION);
-    Matrix4 matrix = frustum(-i, i, -j, j, 1, 500);
-    glLoadMatrixf(matrix.get_ptr());TEST_OPENGL_ERROR();
+    if (color_location != -1) {
+        glUniform3f(color_location, 1., 1., 1.);TEST_OPENGL_ERROR();
+    }
 }
 
 void display (void) {
@@ -107,12 +84,26 @@ void display (void) {
     draw_ocean();
 
     glutSwapBuffers();TEST_OPENGL_ERROR();
-    glFlush();
-    glutPostRedisplay();
+    glFlush();TEST_OPENGL_ERROR();
+    glutPostRedisplay();TEST_OPENGL_ERROR();
 }
 
-bool init_glew (void) {
-    return glewInit() == GLEW_OK;
+void reshape(int width, int height) {
+    glViewport(0, 0, width, height);
+    options.rx = width;
+    options.ry = height;
+
+    int projection_location = glGetUniformLocation(program->get_program_id(), "projection");TEST_OPENGL_ERROR();
+
+    if (projection_location != -1) {
+        float i = width;
+        float j = height;
+        float tmp = sqrt(i * i + j * j) / 2;
+        i /= tmp;
+        j /= tmp;
+        Matrix4 matrix = frustum(-i, i, -j, j, 1, 500);
+        glUniformMatrix4fv(projection_location, 1, false, matrix.get_ptr());TEST_OPENGL_ERROR();
+    }
 }
 
 bool init_glut (struct options& opt) {
@@ -128,6 +119,23 @@ bool init_glut (struct options& opt) {
 
     glutDisplayFunc(display);TEST_OPENGL_ERROR();
     glutReshapeFunc(reshape);TEST_OPENGL_ERROR();
+    return true;
+}
+
+bool init_shaders (void) {
+    std::string vertex_src = "vertex.shd";
+    std::string fragment_src = "fragment.shd";
+    program = Program::make_program(vertex_src, fragment_src);
+
+    if (program == NULL)
+        return false;
+
+    if (!program->get_program_id()) {
+        delete program;
+        return false;
+    }
+
+    glUseProgram(program->get_program_id());TEST_OPENGL_ERROR();
     return true;
 }
 
@@ -168,38 +176,46 @@ bool init_object (void) {
     for(int i = 0; i <= ocean->get_y_points(); ++i)
         oceanVerticiesX.push_back(new double[3 * (ocean->get_x_points() + 1)]);
 
-    for(int i = 0; i <= ocean->get_x_points(); ++i)
-        oceanVerticiesY.push_back(new double[3 * (ocean->get_y_points() + 1)]);
-
-    for(int i = 0; i <= ocean->get_x_points(); ++i)
-        ocean->init_y_vertex_array(i, oceanVerticiesY[i]);
-
     for(int i = 0; i <= ocean->get_y_points(); ++i)
         ocean->init_x_vertex_array(i, oceanVerticiesX[i]);
 
     buffer = (float *) malloc(128 * 128 * 18 * sizeof(float));
+
+    int color_location = glGetUniformLocation(program->get_program_id(), "color");TEST_OPENGL_ERROR();
+
+    if (color_location == -1)
+        return false;
+
+    glUniform3f(color_location, 1., 1., 1.);TEST_OPENGL_ERROR();
     return true;
 }
 
-void myInit (void) {
+bool myInit (void) {
     glClearColor(0.0, 0.0, 0.0, 1.0);TEST_OPENGL_ERROR();
+    return true;
 }
 
 int init (struct options& opt) {
     options = opt;
-    init_glew();
-    init_glut(opt);
-    myInit();
-    init_pov();
-    init_object();
+    if (!init_glut(opt))
+        return 1;
+    if (!init_glew())
+        return 2;
+    if (!myInit())
+        return 3;
+    if (!init_shaders())
+        return 4;
+    if (!init_pov())
+        return 5;
+    if (!init_object())
+        return 6;
     glutMainLoop();
 
     free(buffer);
     for(int i = 0; i < ocean->get_y_points(); ++i)
         delete[] oceanVerticiesX[i];
-    for(int i = 0; i < ocean->get_x_points(); ++i)
-        delete[] oceanVerticiesY[i];
     delete camera;
     delete ocean;
+    delete program;
     return 0;
 }

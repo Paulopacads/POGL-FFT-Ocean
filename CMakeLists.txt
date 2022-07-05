@@ -19,7 +19,7 @@ set(SRC_ENGINE
     "src/tools/gl_utils.cpp"
     "src/tools/matrix4.cpp"
     "src/tools/option_parsing.cpp"
-    # "src/tools/program.cpp"
+    "src/tools/program.cpp"
 )
 
 # Directories containing headers must be specified in the include_directories()
