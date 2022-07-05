@@ -128,6 +128,8 @@ void Ocean::init_x_vertex_array(const int y, double* const vertices) const {
         vertices[3 * i] = (_sceneWidth / _xPoints) * i;
         vertices[3 * i + 2] = (_sceneHeight / _yPoints) * y;
     }
+    vertices[3 * _xPoints] = _sceneWidth;
+    vertices[3 * _xPoints + 2] = (_sceneHeight / _yPoints) * y;
 }
 
 void Ocean::init_y_vertex_array(const int x, double* const vertices) const {
@@ -135,12 +137,14 @@ void Ocean::init_y_vertex_array(const int x, double* const vertices) const {
         vertices[3 * i] = (_sceneWidth / _xPoints) * x;
         vertices[3 * i + 2] = (_sceneHeight / _yPoints) * i;
     }
+    vertices[3 * _yPoints] = (_sceneWidth / _xPoints) * x;
+    vertices[3 * _yPoints + 2] = _sceneHeight;
 }
 
 void Ocean::x_vertex_array(const int y, double* const vertices) const {
     for (int i = 0; i < _xPoints; ++i)
         vertices[3 * i + 1] = pow(-1, i + y) * _realTime[y][i];
-    vertices[3 * _xPoints + 1] = pow(-1, _xPoints + y) * _realTime[y][_xPoints];
+    vertices[3 * _xPoints + 1] = pow(-1, _xPoints + y) * _realTime[y][0];
 }
 
 void Ocean::y_vertex_array(const int x, double* const vertices) const {
