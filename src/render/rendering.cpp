@@ -13,12 +13,18 @@ Camera *camera;
 Ocean *ocean;
 Program *program;
 struct options options;
-std::vector<double *> oceanVerticiesX;
-std::vector<double *> oceanNormalsX;
+std::vector<double *> oceanVerticies;
+std::vector<double *> oceanNormals;
 float *vertex_buffer;
-float *normals_buffer;
+float *normal_buffer;
 uint vao_id;
 uint vbo_id[2];
+
+int world_camera_location;
+int projection_location;
+int vertex_position;
+int vertex_normal;
+int color_location;
 
 bool init_glew (void) {
     return glewInit() == GLEW_OK;
@@ -26,25 +32,22 @@ bool init_glew (void) {
 
 void move_camera (void) {
     camera->translation();
-    int world_camera_location = glGetUniformLocation(program->get_program_id(), "world_camera");TEST_OPENGL_ERROR();
     if (world_camera_location != -1) {
         Matrix4 matrix = lookAt(camera->getX(), camera->getY(), camera->getZ(), camera->getSightX(), camera->getSightY(), camera->getSightZ(), 0, 1, 0);
         glUniformMatrix4fv(world_camera_location, 1, false, matrix.get_ptr());TEST_OPENGL_ERROR();
     }
 }
 
-void compute_normal(const double ax, const double ay, const double az,
-                        const double bx, const double by, const double bz,
-                        const double cx, const double cy, const double cz, double *normal){
+void compute_normal(const float *arr, double *normal){
     double v1[3], v2[3];
 
-    v1[0] = bx - ax;
-    v1[1] = by - ay;
-    v1[2] = bz - az;
+    v1[0] = arr[3] - arr[0];
+    v1[1] = arr[4] - arr[1];
+    v1[2] = arr[5] - arr[2];
 
-    v2[0] = cx - ax;
-    v2[1] = cy - ay;
-    v2[2] = cz - az;
+    v2[0] = arr[6] - arr[0];
+    v2[1] = arr[7] - arr[1];
+    v2[2] = arr[8] - arr[2];
 
     double norm = sqrt(v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]);
     v1[0] /= norm;
@@ -65,73 +68,67 @@ void draw_ocean (void) {
     (*ocean)();
 
     for(int i = 0; i <= ocean->get_y_points(); ++i) {
-        ocean->x_vertex_array(i, oceanVerticiesX[i]);
+        ocean->vertex_array(i, oceanVerticies[i]);
         for (int j = 0; j <= ocean->get_x_points() * 3 + 2; ++j)
-            oceanNormalsX[i][j] = 0;
+            oceanNormals[i][j] = 0;
     }
 
     int curr = 0;
-    int normals_curr = 0;
     double normals[3];
     for (int i = 0; i < ocean->get_y_points(); ++i) {
         for (int j = 0; j < ocean->get_x_points(); ++j) {
-            // Face 1 Point 1
-            vertex_buffer[curr++] = oceanVerticiesX[i][3 * j];
-            vertex_buffer[curr++] = oceanVerticiesX[i][3 * j + 1];
-            vertex_buffer[curr++] = oceanVerticiesX[i][3 * j + 2];
-            // Face 1 Point 2
-            vertex_buffer[curr++] = oceanVerticiesX[i][3 * (j + 1)];
-            vertex_buffer[curr++] = oceanVerticiesX[i][3 * (j + 1) + 1];
-            vertex_buffer[curr++] = oceanVerticiesX[i][3 * (j + 1) + 2];
-            // Face 1 Point 3
-            vertex_buffer[curr++] = oceanVerticiesX[i + 1][3 * j];
-            vertex_buffer[curr++] = oceanVerticiesX[i + 1][3 * j + 1];
-            vertex_buffer[curr++] = oceanVerticiesX[i + 1][3 * j + 2];
+            vertex_buffer[curr++] = oceanVerticies[i][3 * j];
+            vertex_buffer[curr++] = oceanVerticies[i][3 * j + 1];
+            vertex_buffer[curr++] = oceanVerticies[i][3 * j + 2];
 
-            compute_normal(vertex_buffer[curr - 9], vertex_buffer[curr - 8], vertex_buffer[curr - 7],
-                            vertex_buffer[curr - 6], vertex_buffer[curr - 5], vertex_buffer[curr - 4],
-                            vertex_buffer[curr - 3], vertex_buffer[curr - 2], vertex_buffer[curr - 1], normals);
+            vertex_buffer[curr++] = oceanVerticies[i + 1][3 * j];
+            vertex_buffer[curr++] = oceanVerticies[i + 1][3 * j + 1];
+            vertex_buffer[curr++] = oceanVerticies[i + 1][3 * j + 2];
 
-            oceanNormalsX[i][3 * j] += normals[0] * .6;
-            oceanNormalsX[i][3 * j + 1] += normals[1] * .6;
-            oceanNormalsX[i][3 * j + 2] += normals[2] * .6;
-            // Face 1 Point 2
-            oceanNormalsX[i][3 * (j + 1)] += normals[0] * .6;
-            oceanNormalsX[i][3 * (j + 1) + 1] += normals[1] * .6;
-            oceanNormalsX[i][3 * (j + 1) + 2] += normals[2] * .6;
-            // Face 1 Point 3
-            oceanNormalsX[i + 1][3 * j] += normals[0] * .6;
-            oceanNormalsX[i + 1][3 * j + 1] += normals[1] * .6;
-            oceanNormalsX[i + 1][3 * j + 2] += normals[2] * .6;
+            vertex_buffer[curr++] = oceanVerticies[i][3 * (j + 1)];
+            vertex_buffer[curr++] = oceanVerticies[i][3 * (j + 1) + 1];
+            vertex_buffer[curr++] = oceanVerticies[i][3 * (j + 1) + 2];
 
-            // Face 2 Point 1
-            vertex_buffer[curr++] = oceanVerticiesX[i + 1][3 * (j + 1)];
-            vertex_buffer[curr++] = oceanVerticiesX[i + 1][3 * (j + 1) + 1];
-            vertex_buffer[curr++] = oceanVerticiesX[i + 1][3 * (j + 1) + 2];
-            // Face 2 Point 2
-            vertex_buffer[curr++] = oceanVerticiesX[i][3 * (j + 1)];
-            vertex_buffer[curr++] = oceanVerticiesX[i][3 * (j + 1) + 1];
-            vertex_buffer[curr++] = oceanVerticiesX[i][3 * (j + 1) + 2];
-            // Face 2 Point 3
-            vertex_buffer[curr++] = oceanVerticiesX[i + 1][3 * j];
-            vertex_buffer[curr++] = oceanVerticiesX[i + 1][3 * j + 1];
-            vertex_buffer[curr++] = oceanVerticiesX[i + 1][3 * j + 2];
+            compute_normal((vertex_buffer + curr - 9), normals);
 
-            compute_normal(vertex_buffer[curr - 9], vertex_buffer[curr - 8], vertex_buffer[curr - 7],
-                            vertex_buffer[curr - 6], vertex_buffer[curr - 5], vertex_buffer[curr - 4],
-                            vertex_buffer[curr - 3], vertex_buffer[curr - 2], vertex_buffer[curr - 1], normals);
+            oceanNormals[i][3 * j] += normals[0];
+            oceanNormals[i][3 * j + 1] += normals[1];
+            oceanNormals[i][3 * j + 2] += normals[2];
 
-            oceanNormalsX[i + 1][3 * (j + 1)] += normals[0];
-            oceanNormalsX[i + 1][3 * (j + 1) + 1] += normals[1];
-            oceanNormalsX[i + 1][3 * (j + 1) + 2] += normals[2];
-            // Face 1 Point 2
-            oceanNormalsX[i][3 * (j + 1)] += normals[0];
-            oceanNormalsX[i][3 * (j + 1) + 1] += normals[1];
-            oceanNormalsX[i][3 * (j + 1) + 2] += normals[2];
-            // Face 1 Point 3
-            oceanNormalsX[i + 1][3 * j] += normals[0];
-            oceanNormalsX[i + 1][3 * j + 1] += normals[1];
-            oceanNormalsX[i + 1][3 * j + 2] += normals[2];
+            oceanNormals[i + 1][3 * j] += normals[0];
+            oceanNormals[i + 1][3 * j + 1] += normals[1];
+            oceanNormals[i + 1][3 * j + 2] += normals[2];
+
+            oceanNormals[i][3 * (j + 1)] += normals[0];
+            oceanNormals[i][3 * (j + 1) + 1] += normals[1];
+            oceanNormals[i][3 * (j + 1) + 2] += normals[2];
+
+
+            vertex_buffer[curr++] = oceanVerticies[i + 1][3 * (j + 1)];
+            vertex_buffer[curr++] = oceanVerticies[i + 1][3 * (j + 1) + 1];
+            vertex_buffer[curr++] = oceanVerticies[i + 1][3 * (j + 1) + 2];
+
+            vertex_buffer[curr++] = oceanVerticies[i][3 * (j + 1)];
+            vertex_buffer[curr++] = oceanVerticies[i][3 * (j + 1) + 1];
+            vertex_buffer[curr++] = oceanVerticies[i][3 * (j + 1) + 2];
+
+            vertex_buffer[curr++] = oceanVerticies[i + 1][3 * j];
+            vertex_buffer[curr++] = oceanVerticies[i + 1][3 * j + 1];
+            vertex_buffer[curr++] = oceanVerticies[i + 1][3 * j + 2];
+
+            compute_normal((vertex_buffer + curr - 9), normals);
+
+            oceanNormals[i + 1][3 * (j + 1)] += normals[0];
+            oceanNormals[i + 1][3 * (j + 1) + 1] += normals[1];
+            oceanNormals[i + 1][3 * (j + 1) + 2] += normals[2];
+
+            oceanNormals[i][3 * (j + 1)] += normals[0];
+            oceanNormals[i][3 * (j + 1) + 1] += normals[1];
+            oceanNormals[i][3 * (j + 1) + 2] += normals[2];
+
+            oceanNormals[i + 1][3 * j] += normals[0];
+            oceanNormals[i + 1][3 * j + 1] += normals[1];
+            oceanNormals[i + 1][3 * j + 2] += normals[2];
         }
     }
 
@@ -139,48 +136,41 @@ void draw_ocean (void) {
     for (int i = 0; i < ocean->get_y_points(); ++i) {
         for (int j = 0; j < ocean->get_x_points(); ++j) {
             // Face 1 Point 1
-            normals_buffer[curr++] = oceanNormalsX[i][3 * j];
-            normals_buffer[curr++] = oceanNormalsX[i][3 * j + 1];
-            normals_buffer[curr++] = oceanNormalsX[i][3 * j + 2];
-            // Face 1 Point 2
-            normals_buffer[curr++] = oceanNormalsX[i][3 * (j + 1)];
-            normals_buffer[curr++] = oceanNormalsX[i][3 * (j + 1) + 1];
-            normals_buffer[curr++] = oceanNormalsX[i][3 * (j + 1) + 2];
+            normal_buffer[curr++] = oceanNormals[i][3 * j];
+            normal_buffer[curr++] = oceanNormals[i][3 * j + 1];
+            normal_buffer[curr++] = oceanNormals[i][3 * j + 2];
             // Face 1 Point 3
-            normals_buffer[curr++] = oceanNormalsX[i + 1][3 * j];
-            normals_buffer[curr++] = oceanNormalsX[i + 1][3 * j + 1];
-            normals_buffer[curr++] = oceanNormalsX[i + 1][3 * j + 2];
+            normal_buffer[curr++] = oceanNormals[i + 1][3 * j];
+            normal_buffer[curr++] = oceanNormals[i + 1][3 * j + 1];
+            normal_buffer[curr++] = oceanNormals[i + 1][3 * j + 2];
+            // Face 1 Point 2
+            normal_buffer[curr++] = oceanNormals[i][3 * (j + 1)];
+            normal_buffer[curr++] = oceanNormals[i][3 * (j + 1) + 1];
+            normal_buffer[curr++] = oceanNormals[i][3 * (j + 1) + 2];
 
             // Face 2 Point 1
-            normals_buffer[curr++] = oceanNormalsX[i + 1][3 * (j + 1)];
-            normals_buffer[curr++] = oceanNormalsX[i + 1][3 * (j + 1) + 1];
-            normals_buffer[curr++] = oceanNormalsX[i + 1][3 * (j + 1) + 2];
+            normal_buffer[curr++] = oceanNormals[i + 1][3 * (j + 1)];
+            normal_buffer[curr++] = oceanNormals[i + 1][3 * (j + 1) + 1];
+            normal_buffer[curr++] = oceanNormals[i + 1][3 * (j + 1) + 2];
             // Face 2 Point 2
-            normals_buffer[curr++] = oceanNormalsX[i][3 * (j + 1)];
-            normals_buffer[curr++] = oceanNormalsX[i][3 * (j + 1) + 1];
-            normals_buffer[curr++] = oceanNormalsX[i][3 * (j + 1) + 2];
+            normal_buffer[curr++] = oceanNormals[i][3 * (j + 1)];
+            normal_buffer[curr++] = oceanNormals[i][3 * (j + 1) + 1];
+            normal_buffer[curr++] = oceanNormals[i][3 * (j + 1) + 2];
             // Face 2 Point 3
-            normals_buffer[curr++] = oceanNormalsX[i + 1][3 * j];
-            normals_buffer[curr++] = oceanNormalsX[i + 1][3 * j + 1];
-            normals_buffer[curr++] = oceanNormalsX[i + 1][3 * j + 2];
+            normal_buffer[curr++] = oceanNormals[i + 1][3 * j];
+            normal_buffer[curr++] = oceanNormals[i + 1][3 * j + 1];
+            normal_buffer[curr++] = oceanNormals[i + 1][3 * j + 2];
         }
     }
 
-    int color_location = glGetUniformLocation(program->get_program_id(), "color");TEST_OPENGL_ERROR();
-
     if (color_location != -1) {
-        glUniform3f(color_location, .337, .706, 1.);TEST_OPENGL_ERROR();
+        glUniform3f(color_location, .137, .506, .8);TEST_OPENGL_ERROR();
     }
 
     // glEnableClientState(GL_VERTEX_ARRAY);TEST_OPENGL_ERROR();
     // glVertexPointer(3, GL_FLOAT, 0, buffer);TEST_OPENGL_ERROR();
 
     // glDrawArrays(GL_TRIANGLES, 0, ocean->get_x_points() * ocean->get_y_points() * 6);TEST_OPENGL_ERROR();
-
-    int vertex_position = glGetAttribLocation(program->get_program_id(), "position");TEST_OPENGL_ERROR();
-
-    if (vertex_position == -1)
-        return;
 
     glBindVertexArray(vao_id);TEST_OPENGL_ERROR();
 
@@ -189,15 +179,10 @@ void draw_ocean (void) {
     glVertexAttribPointer(vertex_position, 3, GL_FLOAT, GL_FALSE, 0, 0);TEST_OPENGL_ERROR();
     glEnableVertexAttribArray(vertex_position);TEST_OPENGL_ERROR();
 
-    vertex_position = glGetAttribLocation(program->get_program_id(), "normal");TEST_OPENGL_ERROR();
-
-    if (vertex_position == -1)
-        return;
-
     glBindBuffer(GL_ARRAY_BUFFER, vbo_id[1]);TEST_OPENGL_ERROR();
-    glBufferData(GL_ARRAY_BUFFER, ocean->get_x_points() * ocean->get_y_points() * 18 * sizeof(float), normals_buffer, GL_STATIC_DRAW);TEST_OPENGL_ERROR();
-    glVertexAttribPointer(vertex_position, 3, GL_FLOAT, GL_FALSE, 0, 0);TEST_OPENGL_ERROR();
-    glEnableVertexAttribArray(vertex_position);TEST_OPENGL_ERROR();
+    glBufferData(GL_ARRAY_BUFFER, ocean->get_x_points() * ocean->get_y_points() * 18 * sizeof(float), normal_buffer, GL_STATIC_DRAW);TEST_OPENGL_ERROR();
+    glVertexAttribPointer(vertex_normal, 3, GL_FLOAT, GL_FALSE, 0, 0);TEST_OPENGL_ERROR();
+    glEnableVertexAttribArray(vertex_normal);TEST_OPENGL_ERROR();
 
     glDrawArrays(GL_TRIANGLES, 0, ocean->get_x_points() * ocean->get_y_points() * 18);TEST_OPENGL_ERROR();
     glBindVertexArray(0);TEST_OPENGL_ERROR();
@@ -221,8 +206,6 @@ void reshape(int width, int height) {
     glViewport(0, 0, width, height);
     options.rx = width;
     options.ry = height;
-
-    int projection_location = glGetUniformLocation(program->get_program_id(), "projection");TEST_OPENGL_ERROR();
 
     if (projection_location != -1) {
         float i = width;
@@ -265,6 +248,13 @@ bool init_shaders (void) {
     }
 
     glUseProgram(program->get_program_id());TEST_OPENGL_ERROR();
+
+    world_camera_location = glGetUniformLocation(program->get_program_id(), "world_camera");TEST_OPENGL_ERROR();
+    projection_location = glGetUniformLocation(program->get_program_id(), "projection");TEST_OPENGL_ERROR();
+    vertex_position = glGetAttribLocation(program->get_program_id(), "position");TEST_OPENGL_ERROR();
+    vertex_normal = glGetAttribLocation(program->get_program_id(), "normal");TEST_OPENGL_ERROR();
+    color_location = glGetUniformLocation(program->get_program_id(), "color");TEST_OPENGL_ERROR();
+
     return true;
 }
 
@@ -286,7 +276,7 @@ void kb_release (unsigned char key, int, int) {
 bool init_pov (void) {
     float i = options.rx;
     float j = options.ry;
-    camera = new Camera(Camera::KEYBOARD::QWERTY, 5, 5, 5, M_PI * .6, -M_PI * .75, .001, .05, i, j);
+    camera = new Camera(Camera::KEYBOARD::QWERTY, 5, 5, 5, M_PI * .6, -M_PI * .75, .001, .1, i, j);
     glutSetCursor(GLUT_CURSOR_NONE);TEST_OPENGL_ERROR();
     glutPassiveMotionFunc(mouse_move);TEST_OPENGL_ERROR();
     glutKeyboardFunc(kb_press);TEST_OPENGL_ERROR();
@@ -295,23 +285,23 @@ bool init_pov (void) {
 }
 
 bool init_object (void) {
-    ocean = new Ocean(350, 350, 128, 256, .8);
+    ocean = new Ocean(350, 350, 128, 128, .8);
 
-    Height height = Height(128, 256);
-    Philipps philipps = Philipps(350, 350, 128, 256, 50, 2, .1, .0000038);
+    Height height = Height(128, 128);
+    Philipps philipps = Philipps(350, 350, 128, 128, 50, 2, .1, .0000038);
     height.generate_philipps(&philipps);
     ocean->generate_height(&height);
 
     for(int i = 0; i <= ocean->get_y_points(); ++i) {
-        oceanVerticiesX.push_back(new double[3 * (ocean->get_x_points() + 1)]);
-        oceanNormalsX.push_back(new double[3 * (ocean->get_x_points() + 1)]);
+        oceanVerticies.push_back(new double[3 * (ocean->get_x_points() + 1)]);
+        oceanNormals.push_back(new double[3 * (ocean->get_x_points() + 1)]);
     }
 
     for(int i = 0; i <= ocean->get_y_points(); ++i)
-        ocean->init_x_vertex_array(i, oceanVerticiesX[i]);
+        ocean->init_vertex_array(i, oceanVerticies[i]);
 
-    vertex_buffer = (float *) malloc(128 * 256 * 18 * sizeof(float));
-    normals_buffer = (float *) malloc(128 * 256 * 18 * sizeof(float));
+    vertex_buffer = (float *) malloc(128 * 128 * 18 * sizeof(float));
+    normal_buffer = (float *) malloc(128 * 128 * 18 * sizeof(float));
 
     glGenVertexArrays(1, &vao_id);TEST_OPENGL_ERROR();
     glBindVertexArray(vao_id);TEST_OPENGL_ERROR();
@@ -319,21 +309,15 @@ bool init_object (void) {
     glGenBuffers(2, vbo_id);TEST_OPENGL_ERROR();
 
     for(int i = 0; i <= ocean->get_y_points(); ++i) {
-        ocean->x_vertex_array(i, oceanVerticiesX[i]);
+        ocean->vertex_array(i, oceanVerticies[i]);
         for (int j = 0; j <= ocean->get_x_points(); ++j)
-            oceanNormalsX[i][j] = 0;
+            oceanNormals[i][j] = 0;
     }
 
-    int curr = 0;
-    int normals_curr = 0;
-    double normals[3];
     for (int i = 0; i < ocean->get_x_points() * ocean->get_y_points() * 18; ++i) {
         vertex_buffer[i] = 0;
-        normals_buffer[i] = 0;
+        normal_buffer[i] = 0;
     }
-
-    int vertex_position = glGetAttribLocation(program->get_program_id(), "position");TEST_OPENGL_ERROR();
-    int vertex_normal = glGetAttribLocation(program->get_program_id(), "normal");TEST_OPENGL_ERROR();
 
     if (vertex_position == -1) {
         std::cout << "no position\n";
@@ -351,7 +335,7 @@ bool init_object (void) {
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_id[1]);TEST_OPENGL_ERROR();
-    glBufferData(GL_ARRAY_BUFFER, ocean->get_x_points() * ocean->get_y_points() * 18 * sizeof(float), normals_buffer, GL_STATIC_DRAW);TEST_OPENGL_ERROR();
+    glBufferData(GL_ARRAY_BUFFER, ocean->get_x_points() * ocean->get_y_points() * 18 * sizeof(float), normal_buffer, GL_STATIC_DRAW);TEST_OPENGL_ERROR();
     glVertexAttribPointer(vertex_normal, 3, GL_FLOAT, GL_FALSE, 0, 0);TEST_OPENGL_ERROR();
     glEnableVertexAttribArray(vertex_normal);TEST_OPENGL_ERROR();
 
@@ -361,7 +345,12 @@ bool init_object (void) {
 }
 
 bool myInit (void) {
-    glClearColor(0.08, 0.08, 0.1, 1.0);TEST_OPENGL_ERROR();
+    glEnable(GL_DEPTH_TEST);TEST_OPENGL_ERROR();
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);TEST_OPENGL_ERROR();
+    glEnable(GL_CULL_FACE);TEST_OPENGL_ERROR();
+    glClearColor(.529, .808, .922, 1.);TEST_OPENGL_ERROR();
+    glPixelStorei(GL_UNPACK_ALIGNMENT,1);TEST_OPENGL_ERROR();
+    glPixelStorei(GL_PACK_ALIGNMENT,1);TEST_OPENGL_ERROR();
     return true;
 }
 
@@ -382,9 +371,9 @@ int init (struct options& opt) {
     glutMainLoop();
 
     free(vertex_buffer);
-    free(normals_buffer);
+    free(normal_buffer);
     for(int i = 0; i < ocean->get_y_points(); ++i)
-        delete[] oceanVerticiesX[i];
+        delete[] oceanVerticies[i];
     delete camera;
     delete ocean;
     delete program;

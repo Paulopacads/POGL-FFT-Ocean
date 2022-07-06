@@ -1,5 +1,6 @@
 #include "height_spectrum.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 
@@ -13,8 +14,8 @@ void Height::init_fonctor(const int i) {
 }
 
 double Height::operator()() {
-    return sqrt(_philippsSpectrums[_currentX + _xPoints / 2][_currentY + _yPoints / 2] / 2) * gaussian();
     ++_currentY;
+    return sqrt(_philippsSpectrums[_currentX + _xPoints / 2][_currentY + _yPoints / 2] / 2) * gaussian();
 }
 
 void Height::generate_philipps(Philipps* const philipps) {

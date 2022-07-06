@@ -1,5 +1,6 @@
 #include "ocean.hpp"
 
+#include <algorithm>
 #include <GL/freeglut.h>
 #include <iostream>
     
@@ -123,8 +124,8 @@ void Ocean::get_sine_amp(const int x, const double time, std::vector<double>* co
     }
 }
 
-void Ocean::init_x_vertex_array(const int y, double* const vertices) const {
-    for (int i = 0; i <= _xPoints; ++i) {
+void Ocean::init_vertex_array(const int y, double* const vertices) const {
+    for (int i = 0; i < _xPoints; ++i) {
         vertices[3 * i] = (_sceneWidth / _xPoints) * i;
         vertices[3 * i + 2] = (_sceneHeight / _yPoints) * y;
     }
@@ -132,23 +133,8 @@ void Ocean::init_x_vertex_array(const int y, double* const vertices) const {
     vertices[3 * _xPoints + 2] = (_sceneHeight / _yPoints) * y;
 }
 
-void Ocean::init_y_vertex_array(const int x, double* const vertices) const {
-    for (int i = 0; i <= _yPoints; ++i) {
-        vertices[3 * i] = (_sceneWidth / _xPoints) * x;
-        vertices[3 * i + 2] = (_sceneHeight / _yPoints) * i;
-    }
-    vertices[3 * _yPoints] = (_sceneWidth / _xPoints) * x;
-    vertices[3 * _yPoints + 2] = _sceneHeight;
-}
-
-void Ocean::x_vertex_array(const int y, double* const vertices) const {
+void Ocean::vertex_array(const int y, double* const vertices) const {
     for (int i = 0; i < _xPoints; ++i)
         vertices[3 * i + 1] = pow(-1, i + y) * _realTime[y][i];
     vertices[3 * _xPoints + 1] = pow(-1, _xPoints + y) * _realTime[y][0];
-}
-
-void Ocean::y_vertex_array(const int x, double* const vertices) const {
-    for (int i = 0; i < _yPoints; ++i)
-        vertices[3 * i + 1] = pow(-1, x + i) * _realTime[i][x];
-    vertices[3 * _yPoints + 1] = pow(-1, x + _yPoints) * _realTime[0][x];
 }

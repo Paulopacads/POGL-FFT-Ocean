@@ -17,10 +17,8 @@ class Ocean {
     
         void generate_height(Height* const);
         void operator()();
-        void init_x_vertex_array(const int, double* const) const;
-        void init_y_vertex_array(const int, double* const) const;
-        void x_vertex_array(const int, double* const) const;
-        void y_vertex_array(const int, double* const) const;
+        void init_vertex_array(const int, double* const) const;
+        void vertex_array(const int, double* const) const;
     
     private:
         void get_sine_amp(const int, const double, std::vector<double>* const, std::vector<double>* const) const;

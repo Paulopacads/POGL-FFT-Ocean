@@ -8,15 +8,15 @@ in vec3 normal;
 
 vec3 color = vec3(0.337, 0.706, 1.0);
 
-vec3 light_position = vec3(64.0, 64.0, 20.0);
+vec3 light_position = vec3(175.0, 175.0, 20.0);
 
 out vec3 vColor;
 
 void main() {
     gl_Position = projection * world_camera * vec4(position, 1);
-    float curr = dot(normal, normalize(light_position - position));
+    float curr = dot(normalize(normal), normalize(light_position - position));
     if (curr < 0)
         curr = 0;
-    curr = 0.5 + curr * 0.5;
+    curr = 0.3 + curr * 0.5;
     vColor = color * curr;
 }
