@@ -164,7 +164,7 @@ void draw_ocean (void) {
     }
 
     if (color_location != -1) {
-        glUniform3f(color_location, .137, .506, .8);TEST_OPENGL_ERROR();
+        glUniform3f(color_location, options.colr, options.colg, options.colb);TEST_OPENGL_ERROR();
     }
 
     // glEnableClientState(GL_VERTEX_ARRAY);TEST_OPENGL_ERROR();
@@ -276,7 +276,7 @@ void kb_release (unsigned char key, int, int) {
 bool init_pov (void) {
     float i = options.rx;
     float j = options.ry;
-    camera = new Camera(Camera::KEYBOARD::QWERTY, 5, 5, 5, M_PI * .6, -M_PI * .75, .001, .1, i, j);
+    camera = new Camera(Camera::KEYBOARD::QWERTY, 20, 20, 20, M_PI * .6, -M_PI * .75, .001, .1, i, j);
     glutSetCursor(GLUT_CURSOR_NONE);TEST_OPENGL_ERROR();
     glutPassiveMotionFunc(mouse_move);TEST_OPENGL_ERROR();
     glutKeyboardFunc(kb_press);TEST_OPENGL_ERROR();
@@ -285,10 +285,10 @@ bool init_pov (void) {
 }
 
 bool init_object (void) {
-    ocean = new Ocean(350, 350, 128, 128, .8);
+    ocean = new Ocean(options.sx, options.sy, options.nx, options.ny, options.mf);
 
-    Height height = Height(128, 128);
-    Philipps philipps = Philipps(350, 350, 128, 128, 50, 2, .1, .0000038);
+    Height height = Height(options.nx, options.ny);
+    Philipps philipps = Philipps(options.sx, options.sy, options.nx, options.ny, options.wspeed, options.wforce, options.minw, options.wheight);
     height.generate_philipps(&philipps);
     ocean->generate_height(&height);
 
@@ -300,8 +300,8 @@ bool init_object (void) {
     for(int i = 0; i <= ocean->get_y_points(); ++i)
         ocean->init_vertex_array(i, oceanVerticies[i]);
 
-    vertex_buffer = (float *) malloc(128 * 128 * 18 * sizeof(float));
-    normal_buffer = (float *) malloc(128 * 128 * 18 * sizeof(float));
+    vertex_buffer = (float *) malloc(options.nx * options.ny * 18 * sizeof(float));
+    normal_buffer = (float *) malloc(options.nx * options.ny * 18 * sizeof(float));
 
     glGenVertexArrays(1, &vao_id);TEST_OPENGL_ERROR();
     glBindVertexArray(vao_id);TEST_OPENGL_ERROR();
