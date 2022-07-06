@@ -20,9 +20,9 @@ struct options {
     float wforce = 2;
     float minw = .1;
     float wheight = .000005;
-    float colr = .212;
-    float colg = .611;
-    float colb = 1.;
+    float colr = .1;
+    float colg = .2;
+    float colb = .4;
 };
 
 int parse_options(int argc, char** argv, struct options& opt);

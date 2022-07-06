@@ -25,9 +25,9 @@ inline int help(char* program) {
               << "\t--wforce force" << '\t' << "Wind force | default 2" << '\n'
               << "\t--minw size" << '\t' << "Minimum wave size | default 0.1" << '\n'
               << "\t--wheight height" << '\t' << "Wave height proportion | default 0.000005" << '\n'
-              << "\t--colr red" << '\t' << "Ocean's color (red) [0-1] | default 0.212" << '\n'
-              << "\t--colg green" << '\t' << "Ocean's color (green) [0-1] | default 0.611" << '\n'
-              << "\t--colb blue" << '\t' << "Ocean's color (blue) [0-1] | default 1" << '\n'
+              << "\t--colr red" << '\t' << "Ocean's color (red) [0-1] | default 0.1" << '\n'
+              << "\t--colg green" << '\t' << "Ocean's color (green) [0-1] | default 0.2" << '\n'
+              << "\t--colb blue" << '\t' << "Ocean's color (blue) [0-1] | default 0.4" << '\n'
               << "\t\tExamples of colors:" << '\n'
               << "\t\t\t 0, 0, 0.1 | 0.2, 0.45, 0.55 | 0.2, 0.6, 1 | 0, 0.4, 0.7 | 0.6, 0.2, 0.3"
               << std::endl;

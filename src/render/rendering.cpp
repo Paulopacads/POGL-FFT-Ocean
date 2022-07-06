@@ -25,6 +25,7 @@ int projection_location;
 int vertex_position;
 int vertex_normal;
 int color_location;
+int eye_location;
 
 bool init_glew (void) {
     return glewInit() == GLEW_OK;
@@ -35,6 +36,9 @@ void move_camera (void) {
     if (world_camera_location != -1) {
         Matrix4 matrix = lookAt(camera->getX(), camera->getY(), camera->getZ(), camera->getSightX(), camera->getSightY(), camera->getSightZ(), 0, 1, 0);
         glUniformMatrix4fv(world_camera_location, 1, false, matrix.get_ptr());TEST_OPENGL_ERROR();
+    }
+    if (eye_location != -1) {
+        glUniform3f(eye_location, camera->getX(), camera->getY(), camera->getZ());
     }
 }
 
@@ -254,6 +258,7 @@ bool init_shaders (void) {
     vertex_position = glGetAttribLocation(program->get_program_id(), "position");TEST_OPENGL_ERROR();
     vertex_normal = glGetAttribLocation(program->get_program_id(), "normal");TEST_OPENGL_ERROR();
     color_location = glGetUniformLocation(program->get_program_id(), "color");TEST_OPENGL_ERROR();
+    eye_location = glGetUniformLocation(program->get_program_id(), "eye");TEST_OPENGL_ERROR();
 
     return true;
 }

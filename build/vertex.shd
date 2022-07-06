@@ -3,6 +3,7 @@
 uniform mat4 world_camera;
 uniform mat4 projection;
 uniform vec3 color;
+uniform vec3 eye;
 
 in vec3 position;
 in vec3 normal;
@@ -14,8 +15,9 @@ out vec3 vColor;
 void main() {
     gl_Position = projection * world_camera * vec4(position, 1);
     float curr = dot(normalize(normal), normalize(light_position - position));
-    if (curr < 0)
-        curr = 0;
+    if (curr < 0) curr = 0;
     curr = 0.3 + curr * 0.5;
-    vColor = color * curr;
+    float angle = dot(normalize(normal), normalize(eye - position)) * 3;
+    if (angle > 1) angle = 1;
+    vColor = (1 - angle) * vec3(1, 1, 1) + angle * color * curr;
 }
