@@ -21,5 +21,5 @@ class FFT {
             , i_values(i_values)
         {}
         
-        void compute(bool reverse);
+        void compute();
 };

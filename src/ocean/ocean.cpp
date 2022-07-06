@@ -86,7 +86,7 @@ void Ocean::generate_height(Height* const height) {
 void Ocean::operator()() {
     for(int i = 0; i < _xPoints; ++i) {
         get_sine_amp(i, _motionFactor * glutGet(GLUT_ELAPSED_TIME) / 1000., &_realFrequency[i], &_imagFrequency[i]);
-        _yFFT[i]->compute(true);
+        _yFFT[i]->compute();
     }
 
     for(int i = 0; i < _yPoints; ++i) {
@@ -98,7 +98,7 @@ void Ocean::operator()() {
             *currImag++ = _imagFrequency[j][i];
         }
 
-        _xFFT[i]->compute(true);
+        _xFFT[i]->compute();
     }
 }
 

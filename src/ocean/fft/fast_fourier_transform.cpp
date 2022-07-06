@@ -38,13 +38,11 @@ void FFT::sort() {
     }
 }
 
-void FFT::compute(bool reverse) {
+void FFT::compute() {
     sort();
 
     std::vector<double> rvc(n);
     std::vector<double> ivc(n);
-
-    const int inv = reverse ? 1 : -1;
 
     for (int i = 0, nc = n; i < p; i++, nc /= 2) {
         for (int j = 0; j < nc / 2; j++) {
@@ -52,7 +50,7 @@ void FFT::compute(bool reverse) {
             for (int k = 0; k < powi; k++) {
                 const int ii = k + 2 * j * powi;
                 const int jj = ii + powi;
-                const double pos = inv * ii * M_PI / powi;
+                const double pos = ii * M_PI / powi;
 
                 const double pcos = cos(pos);
                 const double psin = sin(pos);
