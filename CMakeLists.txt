@@ -32,7 +32,7 @@ include_directories(
 
 # SETUP
 cmake_minimum_required(VERSION 3.23)
-project(fftocean)
+project(ocean)
 
 # BUILD OPTIONS
 set(CMAKE_CXX_STANDARD 17)
@@ -48,6 +48,6 @@ find_package(GLEW REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS})
 
 # FFTOCEAN
-add_executable(fftocean main.cpp)
-target_sources(fftocean PRIVATE ${SRC_ENGINE})
-target_link_libraries(fftocean PRIVATE Boost::system Boost::program_options ${CMAKE_DL_LIBS} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${GLEW_LIBRARIES})
+add_executable(ocean main.cpp)
+target_sources(ocean PRIVATE ${SRC_ENGINE})
+target_link_libraries(ocean PRIVATE Boost::system Boost::program_options ${CMAKE_DL_LIBS} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${GLEW_LIBRARIES})
