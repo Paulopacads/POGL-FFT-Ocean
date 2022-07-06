@@ -20,6 +20,8 @@ Our team is composed of two maintainers (students):
 
 *Program executed with default parameters
 
+Demo: [click here!](https://youtu.be/w0zbNGq5Pls)
+
 ## Instructions
 
 ### Compile
