@@ -45,6 +45,15 @@ However, if you want to personalize your experience, you may find all the inform
 ./ocean --help
 ```
 
+### Usage
+
+Keybinds for this program are the following.
+- `w` Forward (`z` in AZERTY)
+- `a` Left (`q` in AZERTY)
+- `d` Right
+- `s` Backward
+- `p` Pause (cursor appears and moving is unavailable)
+
 ## Conclusion
 
 Have fun! But be careful when playing around with parameters, you may need a good GPU to launch it.
